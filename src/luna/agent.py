@@ -27,7 +27,13 @@ def executar_turno(mensagens, tools_schema, tool_functions, system):
         if resposta.stop_reason != "tool_use":
             return "".join(b.text for b in resposta.content if b.type == "text")
 
-        mensagens.append({"role": "assistant", "content": resposta.content})
+        # .model_dump() converte os objetos do SDK (TextBlock, ToolUseBlock)
+        # em dict puro. Sem isso, "mensagens" fica com objetos que ate
+        # funcionam aqui dentro, mas quebram na hora de salvar em JSON.
+        mensagens.append({
+            "role": "assistant",
+            "content": [bloco.model_dump() for bloco in resposta.content],
+        })
 
         resultados = []
         for bloco in resposta.content:

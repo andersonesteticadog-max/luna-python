@@ -3,6 +3,7 @@ sys.stdout.reconfigure(encoding="utf-8")
 sys.path.insert(0, "src")
 
 from luna.agent import executar_turno
+from luna.memory import carregar, salvar
 from luna.tools.schemas import TOOLS_SCHEMA
 from luna.tools.crm import TOOL_FUNCTIONS
 
@@ -17,8 +18,11 @@ SYSTEM = (
 
 
 def main():
-    mensagens = []
-    print("=== Luna (modo teste) === (Ctrl+C pra sair)\n")
+    mensagens = carregar()
+    print("=== Luna (modo teste) === (Ctrl+C pra sair)")
+    if mensagens:
+        print(f"(retomando conversa anterior, {len(mensagens)} mensagens)")
+    print()
     while True:
         texto = input("Voce: ").strip()
         if not texto:
@@ -26,6 +30,7 @@ def main():
         mensagens.append({"role": "user", "content": texto})
         resposta = executar_turno(mensagens, TOOLS_SCHEMA, TOOL_FUNCTIONS, SYSTEM)
         mensagens.append({"role": "assistant", "content": resposta})
+        salvar(mensagens)
         print(f"Luna: {resposta}\n")
 
 
