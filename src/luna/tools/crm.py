@@ -22,7 +22,28 @@ def consultar_agenda(data, duracao_min=60):
     return resposta.json()
 
 
+def agendar(cliente_nome, cliente_telefone, pet_nome, servico_nome, data_hora, pet_porte=None):
+    # Sem raise_for_status: um 400 aqui e um erro de negocio esperado
+    # (telefone invalido, servico ambiguo, data no passado) que o agente
+    # precisa LER e reagir, nao uma falha pra estourar excecao.
+    resposta = httpx.post(
+        f"{CRM_URL}/agendar",
+        json={
+            "cliente_nome": cliente_nome,
+            "cliente_telefone": cliente_telefone,
+            "pet_nome": pet_nome,
+            "pet_porte": pet_porte,
+            "servico_nome": servico_nome,
+            "data_hora": data_hora,
+        },
+        headers=_headers,
+        timeout=10,
+    )
+    return resposta.json()
+
+
 TOOL_FUNCTIONS = {
     "listar_servicos": listar_servicos,
     "consultar_agenda": consultar_agenda,
+    "agendar": agendar,
 }

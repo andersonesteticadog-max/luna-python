@@ -18,4 +18,22 @@ TOOLS_SCHEMA = [
             "required": ["data", "duracao_min"],
         },
     },
+    {
+        "name": "agendar",
+        "description": "Efetiva um agendamento no CRM. So chame isso DEPOIS que o cliente "
+                        "confirmar explicitamente o resumo (servico, pet, data/hora, tutor, "
+                        "telefone) que voce apresentou antes.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "cliente_nome": {"type": "string", "description": "Nome do tutor"},
+                "cliente_telefone": {"type": "string", "description": "Telefone com DDD"},
+                "pet_nome": {"type": "string"},
+                "pet_porte": {"type": "string", "description": "Pequeno, Medio ou Grande, se souber"},
+                "servico_nome": {"type": "string"},
+                "data_hora": {"type": "string", "description": "Formato AAAA-MM-DD HH:MM"},
+            },
+            "required": ["cliente_nome", "cliente_telefone", "pet_nome", "servico_nome", "data_hora"],
+        },
+    },
 ]
