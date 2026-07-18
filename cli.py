@@ -3,6 +3,7 @@ sys.stdout.reconfigure(encoding="utf-8")
 sys.path.insert(0, "src")
 
 from luna.agent import executar_turno
+from luna.media.audio import transcrever
 from luna.media.image import preparar_imagem
 from luna.memory import carregar, salvar
 from luna.tools.schemas import TOOLS_SCHEMA
@@ -42,6 +43,19 @@ def main():
                 print(f"[erro ao ler a imagem: {e}]\n")
                 continue
             conteudo = [bloco_imagem, {"type": "text", "text": pergunta}]
+        # /audio <caminho> - so pra testar sem WhatsApp de verdade ainda
+        # (Fase 5). No sistema real, isso vira automatico: audio chega no
+        # webhook, e' transcrito, e so o texto resultante chega na Luna -
+        # ela nunca "ouve" o audio, so le o texto.
+        elif texto.startswith("/audio "):
+            caminho = texto[len("/audio "):].strip()
+            try:
+                texto_transcrito = transcrever(caminho)
+            except OSError as e:
+                print(f"[erro ao ler o audio: {e}]\n")
+                continue
+            print(f"(audio transcrito: \"{texto_transcrito}\")")
+            conteudo = texto_transcrito
         else:
             conteudo = texto
 
