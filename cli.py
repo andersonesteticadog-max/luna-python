@@ -3,6 +3,7 @@ sys.stdout.reconfigure(encoding="utf-8")
 sys.path.insert(0, "src")
 
 from luna.agent import executar_turno
+from luna.media.image import preparar_imagem
 from luna.memory import carregar, salvar
 from luna.tools.schemas import TOOLS_SCHEMA
 from luna.tools.crm import TOOL_FUNCTIONS
@@ -27,7 +28,24 @@ def main():
         texto = input("Voce: ").strip()
         if not texto:
             continue
-        mensagens.append({"role": "user", "content": texto})
+
+        # /imagem <caminho> [pergunta] - so pra testar sem WhatsApp de verdade
+        # ainda (Fase 5). No sistema real, isso vira automatico: o tipo de
+        # mensagem chega pronto no webhook.
+        if texto.startswith("/imagem "):
+            resto = texto[len("/imagem "):].strip()
+            caminho, _, pergunta = resto.partition(" ")
+            pergunta = pergunta.strip() or "Descreva o que voce ve nessa imagem."
+            try:
+                bloco_imagem = preparar_imagem(caminho)
+            except OSError as e:
+                print(f"[erro ao ler a imagem: {e}]\n")
+                continue
+            conteudo = [bloco_imagem, {"type": "text", "text": pergunta}]
+        else:
+            conteudo = texto
+
+        mensagens.append({"role": "user", "content": conteudo})
         resposta = executar_turno(mensagens, TOOLS_SCHEMA, TOOL_FUNCTIONS, SYSTEM)
         mensagens.append({"role": "assistant", "content": resposta})
         salvar(mensagens)
