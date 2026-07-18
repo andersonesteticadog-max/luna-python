@@ -11,6 +11,14 @@ def listar_servicos():
     return resposta.json()
 
 
+def consultar_cliente(telefone):
+    resposta = httpx.get(
+        f"{CRM_URL}/cliente", params={"telefone": telefone}, headers=_headers, timeout=10,
+    )
+    resposta.raise_for_status()
+    return resposta.json()
+
+
 def consultar_agenda(data, duracao_min=60):
     resposta = httpx.get(
         f"{CRM_URL}/agenda",
@@ -44,6 +52,7 @@ def agendar(cliente_nome, cliente_telefone, pet_nome, servico_nome, data_hora, p
 
 TOOL_FUNCTIONS = {
     "listar_servicos": listar_servicos,
+    "consultar_cliente": consultar_cliente,
     "consultar_agenda": consultar_agenda,
     "agendar": agendar,
 }

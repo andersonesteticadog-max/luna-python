@@ -117,6 +117,38 @@ def buscar_servico(nome_busca, porte=None):
     return "ambiguo", [v["nome"] for v in vencedores]
 
 
+def ep_cliente(params):
+    telefone = re.sub(r"\D", "", (params.get("telefone", [None])[0] or ""))
+    if not telefone:
+        return 400, {"erro": "informe o parametro telefone"}
+
+    conn = conectar()
+    cliente = conn.execute(
+        "SELECT id, nome, telefone FROM clientes WHERE telefone = ?", (telefone,)
+    ).fetchone()
+    if not cliente:
+        conn.close()
+        return 200, {"encontrado": False}
+
+    pets = conn.execute(
+        "SELECT nome, especie, porte, raca FROM pets WHERE cliente_id = ?", (cliente["id"],)
+    ).fetchall()
+    agendamentos = conn.execute(
+        "SELECT a.data_hora, a.status, s.nome AS servico "
+        "FROM agendamentos a JOIN servicos s ON s.id = a.servico_id "
+        "WHERE a.cliente_id = ? ORDER BY a.data_hora DESC LIMIT 5",
+        (cliente["id"],),
+    ).fetchall()
+    conn.close()
+
+    return 200, {
+        "encontrado": True,
+        "cliente": {"nome": cliente["nome"], "telefone": cliente["telefone"]},
+        "pets": [dict(p) for p in pets],
+        "ultimos_agendamentos": [dict(a) for a in agendamentos],
+    }
+
+
 def validar_telefone(telefone):
     digitos = re.sub(r"\D", "", telefone or "")
     return digitos if 10 <= len(digitos) <= 11 else None
@@ -208,6 +240,9 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(codigo, corpo)
         if rota.path == "/agenda":
             codigo, corpo = ep_agenda(params)
+            return self._send(codigo, corpo)
+        if rota.path == "/cliente":
+            codigo, corpo = ep_cliente(params)
             return self._send(codigo, corpo)
         return self._send(404, {"erro": "rota nao encontrada"})
 

@@ -5,6 +5,19 @@ TOOLS_SCHEMA = [
         "input_schema": {"type": "object", "properties": {}},
     },
     {
+        "name": "consultar_cliente",
+        "description": "Busca um cliente pelo telefone no CRM, trazendo os pets cadastrados e "
+                        "os ultimos agendamentos. Use quando o cliente informar o telefone, pra "
+                        "reconhecer se ja e cliente antigo e puxar os dados dele/dos pets.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "telefone": {"type": "string", "description": "Telefone informado pelo cliente"},
+            },
+            "required": ["telefone"],
+        },
+    },
+    {
         "name": "consultar_agenda",
         "description": "Consulta os horarios livres do pet shop numa data, considerando a "
                         "duracao do servico desejado (pra nao sugerir horario que nao cabe).",
