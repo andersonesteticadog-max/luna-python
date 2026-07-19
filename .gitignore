@@ -5,3 +5,4 @@ __pycache__/
 .idea/
 crm.db
 conversa.json
+conversas/
