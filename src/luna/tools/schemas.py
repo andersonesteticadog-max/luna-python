@@ -49,4 +49,19 @@ TOOLS_SCHEMA = [
             "required": ["cliente_nome", "cliente_telefone", "pet_nome", "servico_nome", "data_hora"],
         },
     },
+    {
+        "name": "cancelar",
+        "description": "Cancela um agendamento existente no CRM. So chame isso DEPOIS que o "
+                        "cliente confirmar explicitamente o resumo (servico, data/hora) que voce "
+                        "apresentou antes.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "cliente_telefone": {"type": "string", "description": "Telefone com DDD"},
+                "data_hora": {"type": "string",
+                              "description": "Data/hora do agendamento a cancelar, formato AAAA-MM-DD HH:MM"},
+            },
+            "required": ["cliente_telefone", "data_hora"],
+        },
+    },
 ]

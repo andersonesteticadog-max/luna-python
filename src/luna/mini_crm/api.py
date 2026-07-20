@@ -216,6 +216,42 @@ def ep_agendar(body):
                  "preco": resultado["preco"], "data_hora": dh.strftime("%Y-%m-%d %H:%M")}
 
 
+def ep_cancelar(body):
+    obrigatorios = ["cliente_telefone", "data_hora"]
+    faltando = [c for c in obrigatorios if not body.get(c)]
+    if faltando:
+        return 400, {"ok": False, "erro": f"faltam campos: {', '.join(faltando)} - NAO foi cancelado"}
+
+    telefone = validar_telefone(body["cliente_telefone"])
+    if not telefone:
+        return 400, {"ok": False, "erro": "telefone invalido (informe DDD + numero) - NAO foi cancelado"}
+
+    try:
+        dh = datetime.strptime(body["data_hora"], "%Y-%m-%d %H:%M")
+    except ValueError:
+        return 400, {"ok": False, "erro": "formato invalido, use AAAA-MM-DD HH:MM - NAO foi cancelado"}
+
+    conn = conectar()
+    cliente = conn.execute("SELECT id FROM clientes WHERE telefone = ?", (telefone,)).fetchone()
+    if not cliente:
+        conn.close()
+        return 400, {"ok": False, "erro": "cliente nao encontrado - NAO foi cancelado"}
+
+    agendamento = conn.execute(
+        "SELECT id FROM agendamentos WHERE cliente_id = ? AND data_hora = ? AND status != 'Cancelado'",
+        (cliente["id"], dh.strftime("%Y-%m-%d %H:%M")),
+    ).fetchone()
+    if not agendamento:
+        conn.close()
+        return 400, {"ok": False,
+                     "erro": "nenhum agendamento ativo encontrado nesse telefone/horario - NAO foi cancelado"}
+
+    conn.execute("UPDATE agendamentos SET status = 'Cancelado' WHERE id = ?", (agendamento["id"],))
+    conn.commit()
+    conn.close()
+    return 200, {"ok": True, "agendamento_id": agendamento["id"]}
+
+
 class Handler(BaseHTTPRequestHandler):
     def _send(self, code, obj):
         corpo = json.dumps(obj, ensure_ascii=False).encode("utf-8")
@@ -255,8 +291,12 @@ class Handler(BaseHTTPRequestHandler):
         except json.JSONDecodeError:
             return self._send(400, {"erro": "json invalido"})
 
-        if urllib.parse.urlparse(self.path).path == "/agendar":
+        rota = urllib.parse.urlparse(self.path).path
+        if rota == "/agendar":
             codigo, corpo = ep_agendar(body)
+            return self._send(codigo, corpo)
+        if rota == "/cancelar":
+            codigo, corpo = ep_cancelar(body)
             return self._send(codigo, corpo)
         return self._send(404, {"erro": "rota nao encontrada"})
 

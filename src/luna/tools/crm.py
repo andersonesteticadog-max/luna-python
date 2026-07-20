@@ -50,9 +50,23 @@ def agendar(cliente_nome, cliente_telefone, pet_nome, servico_nome, data_hora, p
     return resposta.json()
 
 
+def cancelar(cliente_telefone, data_hora):
+    # Mesmo motivo do agendar: sem raise_for_status, um 400 aqui e' um erro
+    # de negocio esperado (agendamento nao existe, ja foi cancelado) que o
+    # agente precisa ler e reagir, nao uma falha pra estourar excecao.
+    resposta = httpx.post(
+        f"{CRM_URL}/cancelar",
+        json={"cliente_telefone": cliente_telefone, "data_hora": data_hora},
+        headers=_headers,
+        timeout=10,
+    )
+    return resposta.json()
+
+
 TOOL_FUNCTIONS = {
     "listar_servicos": listar_servicos,
     "consultar_cliente": consultar_cliente,
     "consultar_agenda": consultar_agenda,
     "agendar": agendar,
+    "cancelar": cancelar,
 }
